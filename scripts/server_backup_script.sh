@@ -2,7 +2,7 @@
 
 sudo systemctl stop vpnizator.service
 
-sudo systemctl stop xtls-reality-bot.service
+sudo systemctl stop xray.service
 
 # Установка переменной для пути к директории бэкапов
 BACKUP_DIR="/root/backup_dir/"
