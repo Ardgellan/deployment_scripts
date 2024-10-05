@@ -19,7 +19,7 @@ fi
 
 # Запуск скрипта развертывания
 echo "Запуск скрипта развертывания..."
-./deployment/initial_deployment_script.sh
+./folder_deployment/initial_deployment_script.sh
 
 # Предупреждение перед распаковкой и развертыванием
 echo "Внимание! Запуск скрипта для распаковки и развертывания."
@@ -31,6 +31,6 @@ if [[ "$confirm_unpack" != "yes" ]]; then
 fi
 
 echo "Запуск скрипта для распаковки и развертывания..."
-./deployment/unpack_and_deploy_script.sh
+./folder_deployment/unpack_and_deploy_script.sh
 
 echo "Процесс развертывания завершен."

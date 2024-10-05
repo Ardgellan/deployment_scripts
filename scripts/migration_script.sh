@@ -18,7 +18,7 @@ if [[ "$confirm_backup" != "yes" ]]; then
 fi
 
 echo "Запуск скрипта резервного копирования..."
-./migration/server_backup_script.sh &  # Запуск в фоновом режиме
+./folder_migration/server_backup_script.sh
 
 # Предупреждение перед очисткой
 echo "Внимание! Запуск скрипта очистки."
@@ -30,7 +30,7 @@ if [[ "$confirm_clean" != "yes" ]]; then
 fi
 
 echo "Запуск скрипта очистки..."
-./migration/clean_slate_script.sh &  # Запуск в фоновом режиме
+./folder_migration/clean_slate_script.sh
 
 # Ожидание завершения обоих скриптов
 wait
