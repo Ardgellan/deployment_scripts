@@ -29,6 +29,10 @@ wget -O /root/scripts.zip https://github.com/Ardgellan/deployment_scripts/archiv
 echo "Распаковка архива..."
 unzip /root/scripts.zip -d /root/
 
+# Установка прав на исполнение для всех скриптов в папке scripts и её подкаталогах
+echo "Установка прав на исполнение для всех скриптов в папке scripts и её подкаталогах..."
+find /root/deployment_scripts-main/scripts -type f -name "*.sh" -exec chmod +x {} \;
+
 # Перемещение папки с скриптами
 mv /root/deployment_scripts-main/scripts/* "$SCRIPTS_DIR/"
 
