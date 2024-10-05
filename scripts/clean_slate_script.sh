@@ -1,5 +1,27 @@
 #!/bin/bash
 
+# Функция для вывода красного предупреждения
+function red_alert() {
+    echo -e "\033[31mВНИМАНИЕ! Этот скрипт: $1\033[0m"
+    read -p "Вы уверены, что хотите продолжить? (yes/no): " confirm
+    if [[ "$confirm" != "yes" ]]; then
+        echo "Процесс отменен."
+        exit 1
+    fi
+
+    echo -e "\033[31mВЫ ТОЧНО УВЕРЕНЫ?!\033[0m"
+    read -p "Введите yes для продолжения: " confirm2
+    if [[ "$confirm2" != "yes" ]]; then
+        echo "Процесс отменен."
+        exit 1
+    fi
+}
+
+# Пример использования
+red_alert "УДАЛЯЕТ ВСЕ НА ХРЕН С СЕРВЕРА!."
+# Далее идет код скрипта...
+
+
 rm -rf ~/autoinstall.sh
 
 rm -rf ~/get-pip.py
