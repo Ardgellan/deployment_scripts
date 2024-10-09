@@ -1,45 +1,40 @@
 #!/bin/bash
 
-# Путь к конфигурационному файлу
+# Не забудь установить jq! sudo apt-get install jq
+
+# Путь до конфигурационного файла Xray
 CONFIG_FILE="/usr/local/etc/xray/config.json"
 LOG_FILE="/root/scripts/xray_cleanup.log"
 
-# Убедимся, что jq установлен
-if ! command -v jq &> /dev/null
-then
-    echo "jq не установлен. Пожалуйста, установите jq и попробуйте снова." >> "$LOG_FILE"
-    exit 1
-fi
+# Функция для проверки на дубликаты
+check_duplicates() {
+    # Получаем количество уникальных и всех UUID клиентов
+    TOTAL_UUIDS=$(jq '.inbounds[0].settings.clients | length' "$CONFIG_FILE")
+    UNIQUE_UUIDS=$(jq '.inbounds[0].settings.clients | unique_by(.id) | length' "$CONFIG_FILE")
 
-# Создаем резервную копию оригинального файла
-cp "$CONFIG_FILE" "$CONFIG_FILE.bak"
-
-# Извлекаем список клиентов и удаляем дубликаты
-original_clients_count=$(jq '.inbounds[0].settings.clients | length' "$CONFIG_FILE")
-jq '.inbounds[0].settings.clients |= (unique_by(.id))' "$CONFIG_FILE" > /tmp/config_cleaned.json
-
-# Проверяем, успешна ли команда jq
-if [ $? -eq 0 ]; then
-    cleaned_clients_count=$(jq '.inbounds[0].settings.clients | length' /tmp/config_cleaned.json)
-    
-    if [ "$original_clients_count" -gt "$cleaned_clients_count" ]; then
-        echo "$(date): Найдены и удалены дублирующиеся клиенты. Было: $original_clients_count, стало: $cleaned_clients_count" >> "$LOG_FILE"
+    # Если количество уникальных UUID меньше, чем общее количество, значит, есть дубликаты
+    if [ "$TOTAL_UUIDS" -ne "$UNIQUE_UUIDS" ]; then
+        return 1  # Есть дубликаты
     else
-        echo "$(date): Дублирующихся клиентов не найдено. Всего клиентов: $original_clients_count" >> "$LOG_FILE"
+        return 0  # Дубликатов нет
     fi
-    
-    # Перемещаем очищенный файл обратно на место оригинального
-    mv /tmp/config_cleaned.json "$CONFIG_FILE"
-    echo "$(date): Конфигурационный файл успешно обновлен." >> "$LOG_FILE"
-    
-    # Перезапуск Xray
-    systemctl restart xray.service
-    if [ $? -eq 0 ]; then
-        echo "$(date): Xray успешно перезапущен." >> "$LOG_FILE"
-    else
-        echo "$(date): Ошибка при перезапуске Xray." >> "$LOG_FILE"
-    fi
+}
+
+# Проверяем на дубликаты
+if check_duplicates; then
+    echo "$(date): Дубликатов не найдено. Сервис Xray работает нормально." >> "$LOG_FILE"
+    exit 0
 else
-    echo "$(date): Ошибка при обработке конфигурационного файла с помощью jq. Восстановление из резервной копии." >> "$LOG_FILE"
-    cp "$CONFIG_FILE.bak" "$CONFIG_FILE"
+    echo "$(date): Найдены дубликаты клиентов. Удаляем их и перезапускаем сервис..." >> "$LOG_FILE"
+
+    # Удаляем дубликаты
+    jq '.inbounds[0].settings.clients |= unique_by(.id)' "$CONFIG_FILE" > /usr/local/etc/xray/config_cleaned.json
+
+    # Перезаписываем конфигурационный файл
+    mv /usr/local/etc/xray/config_cleaned.json "$CONFIG_FILE"
+
+    # Перезапускаем Xray
+    systemctl restart xray.service
+
+    echo "$(date): Дубликаты удалены, Xray перезапущен." >> "$LOG_FILE"
 fi
