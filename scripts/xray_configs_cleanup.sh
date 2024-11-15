@@ -2,9 +2,22 @@
 
 # Не забудь установить jq! sudo apt-get install jq
 sudo apt-get install jq
+
+# Проверяем, есть ли текущий скрипт в crontab
+CRON_CMD="* * * * * /path/to/your/script.sh"
+CRON_FILE="/var/spool/cron/crontabs/$(whoami)"
+
+# Проверяем, есть ли задача в crontab
+if ! crontab -l | grep -F "$CRON_CMD" >/dev/null 2>&1; then
+    # Добавляем задачу в crontab
+    (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -
+    echo "$(date): Добавлена задача в crontab: $CRON_CMD" >> /root/scripts/xray_cleanup.log
+fi
+
 # Путь до конфигурационного файла Xray
 CONFIG_FILE="/usr/local/etc/xray/config.json"
 LOG_FILE="/root/scripts/xray_cleanup.log"
+
 
 # Функция для проверки на дубликаты
 check_duplicates() {
