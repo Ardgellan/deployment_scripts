@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Не забудь установить jq! sudo apt-get install jq
-
+sudo apt-get install jq
 # Путь до конфигурационного файла Xray
 CONFIG_FILE="/usr/local/etc/xray/config.json"
 LOG_FILE="/root/scripts/xray_cleanup.log"
