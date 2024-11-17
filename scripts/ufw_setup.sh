@@ -26,10 +26,18 @@ fi
 # IP-адрес Nginx-сервера (укажите свой)
 NGINX_IP="45.12.137.116"
 
+# IP-адрес вашего компьютера (укажите свой)
+MY_COMPUTER_IP="95.164.8.66"
+
 # Разрешить доступ с IP Nginx-сервера
 echo "Разрешаем доступ с IP Nginx-сервера: $NGINX_IP"
 sudo ufw allow from "$NGINX_IP" to any port 80
 sudo ufw allow from "$NGINX_IP" to any port 443
+
+# Разрешить доступ с вашего компьютера
+echo "Разрешаем доступ с вашего компьютера: $MY_COMPUTER_IP"
+sudo ufw allow from "$MY_COMPUTER_IP" to any port 80
+sudo ufw allow from "$MY_COMPUTER_IP" to any port 443
 
 # Заблокировать доступ ко всем остальным
 echo "Блокируем доступ ко всем остальным IP-адресам на порты 80 и 443"
