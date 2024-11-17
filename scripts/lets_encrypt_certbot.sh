@@ -68,17 +68,6 @@ sudo systemctl restart nginx
 # Проверяем возможность автоматического обновления сертификатов
 sudo certbot renew --dry-run
 
-# Разрешить доступ с IP Nginx-сервера
-sudo ufw allow from 45.12.137.116 to any port 80
-sudo ufw allow from 45.12.137.116 to any port 443
-
-# Заблокировать доступ ко всем остальным
-sudo ufw deny 80
-sudo ufw deny 443
-
 # Уведомление об успешной настройке
 echo -e "\033[1;32mСертификат успешно установлен и настроен для домена $server_domain_name.\033[0m"
 echo -e "\033[1;32mСертификат будет автоматически обновляться.\033[0m"
-
-# Очистка ненужных пакетов
-sudo apt autoremove -y
