@@ -2,7 +2,7 @@
 
 # Красная тревога в начале
 echo -e "\033[31mВНИМАНИЕ! Этот скрипт настроит брандмауэр UFW для вашего сервера."
-echo -e "Будут разрешены соединения с указанного IP-адреса (Nginx-сервер) на порты 80 и 443, а все остальные соединения на эти порты будут заблокированы."
+echo -e "Будут разрешены соединения с указанных IP-адресов, а все остальные соединения на эти порты будут заблокированы."
 echo -e "Вы уверены, что хотите продолжить? (yes/no)"
 read confirm
 if [[ "$confirm" != "yes" ]]; then
@@ -10,44 +10,24 @@ if [[ "$confirm" != "yes" ]]; then
     exit 1
 fi
 
-# # Проверяем, установлен ли ufw
-# if ! command -v ufw &> /dev/null; then
-#     echo -e "\033[31mUFW не установлен. Устанавливаю UFW...\033[0m"
-#     sudo apt update && sudo apt install ufw -y
-#     if ! command -v ufw &> /dev/null; then
-#         echo -e "\033[31mОшибка! Не удалось установить UFW.\033[0m"
-#         exit 1
-#     fi
-#     echo -e "\033[32mUFW успешно установлен.\033[0m"
-# else
-#     echo -e "\033[32mUFW уже установлен.\033[0m"
-# fi
+# Проверка, установлен ли ufw
+if ! command -v ufw &> /dev/null; then
+    echo "UFW не установлен. Устанавливаю..."
+    sudo apt-get update
+    sudo apt-get install -y ufw
+else
+    echo "UFW уже установлен."
+fi
 
-# # IP-адрес Nginx-сервера (укажите свой)
-# NGINX_IP="45.12.137.116"
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
 
-# # IP-адрес вашего компьютера (укажите свой)
-# MY_COMPUTER_IP="95.164.8.66"
+sudo ufw allow ssh
 
-# # Разрешить доступ с IP Nginx-сервера
-# echo "Разрешаем доступ с IP Nginx-сервера: $NGINX_IP"
-# sudo ufw allow from "$NGINX_IP" to any port 80
-# sudo ufw allow from "$NGINX_IP" to any port 443
+sudo ufw allow from 46.138.13.154 # Личный Компьютер
+sudo ufw allow from 95.164.113.65 # VPN
+sudo ufw allow from 45.12.137.116 # Proxynode
 
-# # Разрешить доступ с вашего компьютера
-# echo "Разрешаем доступ с вашего компьютера: $MY_COMPUTER_IP"
-# sudo ufw allow from "$MY_COMPUTER_IP" to any port 80
-# sudo ufw allow from "$MY_COMPUTER_IP" to any port 443
+sudo ufw enable
 
-# # Заблокировать доступ ко всем остальным
-# echo "Блокируем доступ ко всем остальным IP-адресам на порты 80 и 443"
-# sudo ufw deny 80
-# sudo ufw deny 443
-
-# # Включаем ufw, если он еще не включен
-# echo "Включаем UFW..."
-# sudo ufw enable
-
-# # Проверка статуса UFW
-# echo "Статус UFW:"
-# sudo ufw status verbose
+sudo ufw status verbose
