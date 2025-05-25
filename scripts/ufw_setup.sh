@@ -34,6 +34,9 @@ sudo ufw allow from 46.138.13.154 # Личный Компьютер
 sudo ufw allow from 95.164.113.65 # VPN
 sudo ufw allow from 45.12.137.116 # Proxynode
 
+sudo ufw allow from 217.197.107.34; #aeza_backend
+sudo ufw allow from 46.138.4.211;   # Мой PC
+
 sudo ufw enable
 
 sudo ufw status verbose
