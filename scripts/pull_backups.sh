@@ -10,7 +10,7 @@ mkdir -p "$LOCAL_BACKUP_DIR"
 
 echo "[$(date)] Начинаем загрузку бэкапов с $MAIN_SERVER_IP..."
 
-scp "$MAIN_SERVER_USER@$MAIN_SERVER_IP:$REMOTE_BACKUP_DIR/backup_*.tar.gz" "$LOCAL_BACKUP_DIR/"
+rsync -avz --ignore-existing "$MAIN_SERVER_USER@$MAIN_SERVER_IP:$REMOTE_BACKUP_DIR/" "$LOCAL_BACKUP_DIR/"
 if [ $? -ne 0 ]; then
     echo "Ошибка загрузки бэкапов с основного сервера"
     exit 1
