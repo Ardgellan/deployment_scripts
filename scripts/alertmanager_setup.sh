@@ -40,7 +40,7 @@ route:
 receivers:
   - name: 'telegram'
     telegram_configs:
-      - bot_token: '${BOT_TOKEN}'
+    #   - bot_token: '${BOT_TOKEN}'
         chat_id: '${CHAT_ID}'
         send_resolved: true
       # Канал пока закомментирован, раскомментируй для использования
