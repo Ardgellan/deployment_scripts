@@ -10,7 +10,7 @@ CONFIG_FILE="$CONFIG_DIR/config.yml"
 RULES_FILE="/etc/prometheus/alert.rules.yml"
 PROMETHEUS_CONFIG="/etc/prometheus/prometheus.yml"
 
-# read -p "Введите Telegram Bot Token: " BOT_TOKEN
+read -p "Введите Telegram Bot Token (можно оставить пустым): " BOT_TOKEN
 read -p "Введите Telegram Chat ID (личный аккаунт): " CHAT_ID
 
 echo "Устанавливаем Alertmanager..."
@@ -28,7 +28,7 @@ sudo mv alertmanager-${ALERT_VER}.linux-amd64/alertmanager $BIN_DIR/
 sudo mv alertmanager-${ALERT_VER}.linux-amd64/amtool $BIN_DIR/
 rm -rf alertmanager-${ALERT_VER}.linux-amd64*
 
-# Создаем директорию и конфиг Alertmanager с уведомлениями только в личный чат Telegram
+# Создаем директорию и конфиг Alertmanager
 sudo mkdir -p $CONFIG_DIR
 sudo tee $CONFIG_FILE > /dev/null <<EOF
 global:
@@ -39,15 +39,19 @@ route:
 
 receivers:
   - name: 'telegram'
+EOF
+
+# Добавляем telegram_configs только если указан токен
+if [[ -n "$BOT_TOKEN" ]]; then
+sudo tee -a $CONFIG_FILE > /dev/null <<EOF
     telegram_configs:
-    #   - bot_token: '${BOT_TOKEN}'
+      - bot_token: '${BOT_TOKEN}'
         chat_id: '${CHAT_ID}'
         send_resolved: true
-      # Канал пока закомментирован, раскомментируй для использования
-      # - bot_token: '${BOT_TOKEN}'
-      #   chat_id: '@your_channel_name'
-      #   send_resolved: true
 EOF
+else
+    echo "⚠️  Telegram Bot Token не указан. Уведомления не будут отправляться."
+fi
 
 sudo chown -R alertmanager:alertmanager $CONFIG_DIR
 
@@ -72,7 +76,7 @@ EOF
 sudo systemctl daemon-reload
 sudo systemctl enable --now alertmanager
 
-echo "Alertmanager установлен и запущен."
+echo "✅ Alertmanager установлен и запущен."
 
 # Создаем правила алертов
 sudo tee $RULES_FILE > /dev/null <<EOF
@@ -89,19 +93,19 @@ groups:
           description: "Node Exporter on {{ \$labels.instance }} has been down for more than 1 minute."
 EOF
 
-echo "Добавляем alert.rules.yml в конфигурацию Prometheus..."
+echo "🔧 Добавляем alert.rules.yml в конфигурацию Prometheus..."
 
-# Проверяем и добавляем правило в prometheus.yml, если еще нет
+# Добавляем alert.rules.yml если не добавлено
 if ! grep -q "alert.rules.yml" $PROMETHEUS_CONFIG; then
     sudo sed -i '/rule_files:/a \  - "/etc/prometheus/alert.rules.yml"' $PROMETHEUS_CONFIG
 fi
 
-# Добавляем alertmanager endpoint в prometheus.yml, если нет
+# Добавляем alertmanager endpoint если не добавлено
 if ! grep -q "alertmanagers:" $PROMETHEUS_CONFIG; then
     sudo sed -i '/^alerting:/a \  alertmanagers:\n    - static_configs:\n        - targets:\n          - "localhost:9093"' $PROMETHEUS_CONFIG
 fi
 
-echo "Перезапускаем Prometheus..."
+echo "🔁 Перезапускаем Prometheus..."
 sudo systemctl restart prometheus
 
-echo "Готово! Alertmanager и Prometheus настроены с уведомлениями в личный Telegram."
+echo "🎉 Готово! Alertmanager и Prometheus настроены. Telegram-уведомления ${BOT_TOKEN:+включены}${BOT_TOKEN:+"."}${BOT_TOKEN:-отключены.}"
