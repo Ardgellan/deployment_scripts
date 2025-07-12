@@ -189,12 +189,60 @@ if [ -z "$MAIN_IFACE" ]; then
     exit 1
 fi
 
-# 8. Контроль интерфейсов
-sudo ufw allow out on $MAIN_IFACE comment "Разрешить основной интерфейс"
+# 🚫 Запрет опасных портов на основном интерфейсе (VPN)
+# SMTP (спам)
+sudo ufw deny out on $MAIN_IFACE to any port 25 proto tcp comment 'Block SMTP'
+sudo ufw deny out on $MAIN_IFACE to any port 465 proto tcp comment 'Block SMTPS'
+sudo ufw deny out on $MAIN_IFACE to any port 587 proto tcp comment 'Block Auth SMTP'
+
+# IRC, Telnet, RDP, NFS, SMB
+sudo ufw deny out on $MAIN_IFACE to any port 23 proto tcp comment 'Block Telnet'
+sudo ufw deny out on $MAIN_IFACE to any port 445 proto tcp comment 'Block SMB'
+sudo ufw deny out on $MAIN_IFACE to any port 2049 proto tcp comment 'Block NFS'
+sudo ufw deny out on $MAIN_IFACE to any port 3389 proto tcp comment 'Block RDP'
+sudo ufw deny out on $MAIN_IFACE to any port 6660:6670 proto tcp comment 'Block IRC'
+
+# Tor и SOCKS
+sudo ufw deny out on $MAIN_IFACE to any port 1080 proto tcp comment 'Block SOCKS'
+sudo ufw deny out on $MAIN_IFACE to any port 9001 proto tcp comment 'Block Tor relay'
+sudo ufw deny out on $MAIN_IFACE to any port 9050 proto tcp comment 'Block Tor client'
+
+# Майнеры
+sudo ufw deny out on $MAIN_IFACE to any port 3333 proto tcp comment 'Block mining port 3333'
+sudo ufw deny out on $MAIN_IFACE to any port 4444 proto tcp comment 'Block mining port 4444'
+sudo ufw deny out on $MAIN_IFACE to any port 7777 proto tcp comment 'Block mining port 7777'
+
+# BitTorrent и P2P
+sudo ufw deny out on $MAIN_IFACE to any port 6881:6889 proto tcp comment 'Block BitTorrent TCP'
+sudo ufw deny out on $MAIN_IFACE to any port 6881:6889 proto udp comment 'Block BitTorrent UDP'
+
+# VPN-в-VPN и прокси
+sudo ufw deny out on $MAIN_IFACE to any port 500 proto udp comment 'Block IPsec/IKE'
+sudo ufw deny out on $MAIN_IFACE to any port 4500 proto udp comment 'Block IPsec NAT-T'
+sudo ufw deny out on $MAIN_IFACE to any port 1194 proto udp comment 'Block OpenVPN-in-VPN'
+
+# Winbox, SNMP, LDAP
+sudo ufw deny out on $MAIN_IFACE to any port 8291 proto tcp comment 'Block Winbox'
+sudo ufw deny out on $MAIN_IFACE to any port 161 proto udp comment 'Block SNMP'
+sudo ufw deny out on $MAIN_IFACE to any port 389 proto tcp comment 'Block LDAP'
+sudo ufw deny out on $MAIN_IFACE to any port 636 proto tcp comment 'Block LDAPS'
 
 # 9. Защита от сканирования
 sudo ufw deny in proto tcp from any to any port 111,2049 comment 'Block NFS'
 sudo ufw deny in proto tcp from any to any port 3306,5432 comment 'Block DB'
+
+sudo ufw deny out on $MAIN_IFACE to any port 69 proto udp comment 'Block TFTP'
+sudo ufw deny out on $MAIN_IFACE to any port 5938 proto tcp comment 'Block TeamViewer'
+sudo ufw deny out on $MAIN_IFACE to any port 6568 proto tcp comment 'Block AnyDesk'
+sudo ufw deny out on $MAIN_IFACE to any port 5900:5903 proto tcp comment 'Block VNC'
+sudo ufw deny out on $MAIN_IFACE to any port 1900 proto udp comment 'Block UPnP'
+sudo ufw deny out on $MAIN_IFACE to any port 5353 proto udp comment 'Block mDNS'
+sudo ufw deny out on $MAIN_IFACE to any port 6000:6010 proto tcp comment 'Block X11 display forwarding'
+sudo ufw deny out on $MAIN_IFACE to any port 137:139 proto udp comment 'Block NetBIOS'
+sudo ufw deny out on $MAIN_IFACE to any port 137:139 proto tcp comment 'Block NetBIOS'
+
+# 8. Контроль интерфейсов
+sudo ufw allow out on $MAIN_IFACE comment "Разрешить основной интерфейс"
 
 # 10. Активация
 sudo ufw --force enable
