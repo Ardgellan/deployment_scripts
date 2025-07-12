@@ -153,6 +153,7 @@ sudo ufw default deny outgoing
 sudo ufw limit 22/tcp comment 'SSH bruteforce protection'
 
 # Веб-порты (для сертификатов и перенаправления)
+sudo ufw allow in 8000/tcp comment 'Allow xray API port'
 sudo ufw allow in 80/tcp comment 'HTTP'
 sudo ufw allow in 443/tcp comment 'HTTPS'
 sudo ufw allow in 443/udp comment 'QUIC'
