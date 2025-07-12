@@ -43,62 +43,129 @@
 
 #!/bin/bash
 
+# echo -e "\033[31m
+# ВНИМАНИЕ! Этот скрипт:
+# - Полностью сбросит UFW
+# - Запретит весь входящий и исходящий трафик по умолчанию
+# - Разрешит только нужные порты и IP-адреса
+# - Заблокирует исходящие соединения на приватные сети
+# \033[0m"
+
+# read -p "Вы уверены, что хотите продолжить? (yes/no): " confirm
+# if [[ "$confirm" != "yes" ]]; then
+#     echo "Процесс отменён."
+#     exit 1
+# fi
+
+# # Установка UFW при необходимости
+# if ! command -v ufw &> /dev/null; then
+#     echo "UFW не установлен. Устанавливаю..."
+#     sudo apt-get update
+#     sudo apt-get install -y ufw
+# fi
+
+# # Сброс текущих правил
+# sudo ufw --force reset
+
+# # Базовая политика
+# sudo ufw default deny incoming
+# sudo ufw default deny outgoing
+
+# # Разрешаем входящие подключения
+# sudo ufw allow in 22/tcp               # SSH
+# sudo ufw allow in 443/tcp              # HTTPS TCP
+# sudo ufw allow in 443/udp              # HTTPS UDP (QUIC)
+# sudo ufw allow in 80/tcp               # HTTP TCP
+
+# # Белый список IP-адресов (входящий трафик)
+# sudo ufw allow from 46.138.13.154
+# sudo ufw allow from 217.197.107.34
+# sudo ufw allow from 178.236.244.106
+# sudo ufw allow from 46.138.4.211
+# sudo ufw allow from 85.192.37.53
+
+# # Запрет входящего трафика из некоторых подсетей
+# sudo ufw deny in 10.0.0.0/8
+# sudo ufw deny in 172.0.0.0/8
+# sudo ufw deny in 185.232.0.0/14
+# sudo ufw deny in 192.0.0.0/8
+# sudo ufw deny in 102.0.0.0/8
+# sudo ufw deny in 198.0.0.0/8
+
+# # Разрешаем исходящие подключения по нужным портам
+# sudo ufw allow out 53                  # DNS (udp и tcp)
+# sudo ufw allow out 80                  # HTTP
+# sudo ufw allow out 443                 # HTTPS
+# sudo ufw allow out 22                  # SSH
+
+# # Запрет исходящего трафика в приватные и определённые сети
+# for net in \
+#   10.0.0.0/8 \
+#   172.16.0.0/12 \
+#   192.168.0.0/16 \
+#   100.64.0.0/10 \
+#   198.18.0.0/15 \
+#   169.254.0.0/16 \
+#   185.234.0.0/14 \
+#   102.0.0.0/8 \
+#   172.0.0.0/8 \
+#   192.0.0.0/8 \
+#   198.0.0.0/8
+# do
+#   sudo ufw deny out from any to $net
+# done
+
+# # Включаем UFW
+# sudo ufw --force enable
+
+# echo -e "\n🎯 Текущие правила:"
+# sudo ufw status verbose
+
+# echo -e "\n\n\n\n\n"
+
+# sudo iptables-save
+
+
+#!/bin/bash
+
 echo -e "\033[31m
-ВНИМАНИЕ! Этот скрипт:
-- Полностью сбросит UFW
-- Запретит весь входящий и исходящий трафик по умолчанию
-- Разрешит только нужные порты и IP-адреса
-- Заблокирует исходящие соединения на приватные сети
+=== НАСТРОЙКА UFW ДЛЯ VPN-СЕРВЕРА ===
+• Входящие: только SSH (с защитой), HTTP/HTTPS, Xray
+• Исходящие: только VPN + системные порты
+• Полная блокировка приватных сетей
+• Защита от DDoS/сканирования
 \033[0m"
 
-read -p "Вы уверены, что хотите продолжить? (yes/no): " confirm
-if [[ "$confirm" != "yes" ]]; then
-    echo "Процесс отменён."
-    exit 1
-fi
-
-# Установка UFW при необходимости
+# 1. Установка UFW
 if ! command -v ufw &> /dev/null; then
-    echo "UFW не установлен. Устанавливаю..."
-    sudo apt-get update
-    sudo apt-get install -y ufw
+    sudo apt update && sudo apt install -y ufw
 fi
 
-# Сброс текущих правил
+# 2. Сброс правил
 sudo ufw --force reset
 
-# Базовая политика
+# 3. Базовые политики
 sudo ufw default deny incoming
 sudo ufw default deny outgoing
 
-# Разрешаем входящие подключения
-sudo ufw allow in 22/tcp               # SSH
-sudo ufw allow in 443/tcp              # HTTPS TCP
-sudo ufw allow in 443/udp              # HTTPS UDP (QUIC)
-sudo ufw allow in 80/tcp               # HTTP TCP
+# 4. Входящие правила (с защитой)
+# SSH - лимит 5 попыток/мин + разрешение всем
+sudo ufw limit 22/tcp comment 'SSH bruteforce protection'
 
-# Белый список IP-адресов (входящий трафик)
-sudo ufw allow from 46.138.13.154
-sudo ufw allow from 217.197.107.34
-sudo ufw allow from 178.236.244.106
-sudo ufw allow from 46.138.4.211
-sudo ufw allow from 85.192.37.53
+# Веб-порты (для сертификатов и перенаправления)
+sudo ufw allow in 80/tcp comment 'HTTP'
+sudo ufw allow in 443/tcp comment 'HTTPS'
+sudo ufw allow in 443/udp comment 'QUIC'
 
-# Запрет входящего трафика из некоторых подсетей
-sudo ufw deny in 10.0.0.0/8
-sudo ufw deny in 172.0.0.0/8
-sudo ufw deny in 185.232.0.0/14
-sudo ufw deny in 192.0.0.0/8
-sudo ufw deny in 102.0.0.0/8
-sudo ufw deny in 198.0.0.0/8
+# 5. Исходящие правила
+# Системные порты (ограниченный набор)
+sudo ufw allow out 53/udp comment 'DNS UDP'
+sudo ufw allow out 53/tcp comment 'DNS TCP'
+sudo ufw allow out 80/tcp comment 'HTTP (certbot)'
+sudo ufw allow out 443/tcp comment 'HTTPS'
+sudo ufw allow out 443/udp comment 'HTTPS'
+sudo ufw allow out 123/udp comment 'NTP'
 
-# Разрешаем исходящие подключения по нужным портам
-sudo ufw allow out 53                  # DNS (udp и tcp)
-sudo ufw allow out 80                  # HTTP
-sudo ufw allow out 443                 # HTTPS
-sudo ufw allow out 22                  # SSH
-
-# Запрет исходящего трафика в приватные и определённые сети
 for net in \
   10.0.0.0/8 \
   172.16.0.0/12 \
@@ -106,7 +173,7 @@ for net in \
   100.64.0.0/10 \
   198.18.0.0/15 \
   169.254.0.0/16 \
-  185.232.0.0/14 \
+  185.234.0.0/14 \
   102.0.0.0/8 \
   172.0.0.0/8 \
   192.0.0.0/8 \
@@ -115,8 +182,24 @@ do
   sudo ufw deny out from any to $net
 done
 
-# Включаем UFW
+# 1. Определяем основной интерфейс
+MAIN_IFACE=$(ip -o -4 route show to default | awk '{print $5}' | head -1)
+if [ -z "$MAIN_IFACE" ]; then
+    echo "Ошибка: не удалось определить основной интерфейс!"
+    exit 1
+fi
+
+# 8. Контроль интерфейсов
+sudo ufw allow out on $MAIN_IFACE comment "Разрешить основной интерфейс"
+
+# 9. Защита от сканирования
+sudo ufw deny in proto tcp from any to any port 111,2049 comment 'Block NFS'
+sudo ufw deny in proto tcp from any to any port 3306,5432 comment 'Block DB'
+
+# 10. Активация
 sudo ufw --force enable
+echo -e "\n\033[32m=== ПРАВИЛА АКТИВИРОВАНЫ ===\033[0m"
+
 
 echo -e "\n🎯 Текущие правила:"
 sudo ufw status verbose
