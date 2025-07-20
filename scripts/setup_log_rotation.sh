@@ -1,6 +1,8 @@
 #!/bin/bash
 # 🛠 setup_log_rotation.sh
 
+set -e
+
 echo "== Настройка logrotate для rsyslog =="
 
 cat <<EOF > /etc/logrotate.d/rsyslog
@@ -32,7 +34,28 @@ cat <<EOF > /etc/logrotate.d/rsyslog
 }
 EOF
 
+echo "== Настройка logrotate для Xray =="
+
+cat <<EOF > /etc/logrotate.d/xray
+/var/log/xray/access.log
+/var/log/xray/error.log
+{
+    daily
+    maxsize 50M
+    rotate 7
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        systemctl restart xray > /dev/null 2>&1 || true
+    endscript
+}
+EOF
+
 echo "== Настройка ограничения systemd journal =="
+
 mkdir -p /etc/systemd/journald.conf.d
 cat <<EOF > /etc/systemd/journald.conf.d/limit.conf
 [Journal]
@@ -41,7 +64,7 @@ SystemMaxFileSize=20M
 MaxRetentionSec=1week
 EOF
 
-echo "== Перезапуск journald =="
+echo "== Перезапуск systemd-journald =="
 systemctl restart systemd-journald
 
 echo "== Принудительная ротация логов =="
