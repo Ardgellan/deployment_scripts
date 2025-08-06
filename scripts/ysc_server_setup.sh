@@ -70,9 +70,9 @@ else
     echo "preserve_hostname: true" >> /etc/cloud/cloud.cfg
 fi
 
-./root/scripts/setup_log_rotation.sh
+./scripts/setup_log_rotation.sh
 
-./root/scripts/ufw_setup.sh
+./scripts/ufw_setup.sh
 
 
 echo "[DONE] Настройка завершена. Перезагружаем сервер..."
