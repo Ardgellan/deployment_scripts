@@ -30,7 +30,7 @@ network:
   version: 2
   renderer: networkd
   ethernets:
-    $INTERFACE:
+    enp1s0:
       addresses:
         - $STATIC_IP
       nameservers:
