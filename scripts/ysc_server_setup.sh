@@ -30,7 +30,7 @@ network:
   version: 2
   renderer: networkd
   ethernets:
-    enp1s0:
+    enp0s3:
       addresses:
         - $STATIC_IP
       nameservers:
@@ -72,8 +72,8 @@ fi
 
 ./scripts/setup_log_rotation.sh
 
-./scripts/ufw_setup.sh
+# ./scripts/ufw_setup.sh
 
 
 echo "[DONE] Настройка завершена. Перезагружаем сервер..."
-reboot
+# reboot
