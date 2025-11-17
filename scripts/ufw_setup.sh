@@ -45,7 +45,7 @@ for net in \
   192.168.0.0/16 \
   100.64.0.0/10 \
   198.18.0.0/15 \
-  169.254.0.0/16 \
+  169.254.0.0/16
 do
   sudo ufw deny out from any to $net
 done
